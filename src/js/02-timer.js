@@ -22,7 +22,7 @@ const options = {
   onClose(selectedDates) {
     msSelected = selectedDates[0].getTime();
     if (msSelected < new Date()) {
-      Notiflix.failure('Please choose a date in the future.');
+      Notiflix.Notify.failure('Please choose a date in the future.');
       return;
     }
     btnStartRef.classList.add('btn');
