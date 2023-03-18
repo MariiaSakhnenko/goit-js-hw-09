@@ -12,13 +12,13 @@ refs.formEl.addEventListener('submit', start);
 function start(evt) {
   evt.preventDefault();
 
-  const AMOUNT = refs.amountEl.value;
-  const DELAY = refs.delayEl.value;
-  const STEP = refs.stepEl.value;
+  const Amount = refs.amountEl.value;
+  const Delay = refs.delayEl.value;
+  const Step = refs.stepEl.value;
 
-  let delay = Number(DELAY);
+  let delay = Number(Delay);
 
-  for (let position = 1; position <= AMOUNT; position += 1) {
+  for (let position = 1; position <= Amount; position += 1) {
     createPromise({ position, delay })
       .then(({ position, delay }) =>
         Notiflix.Notify.success(
@@ -29,7 +29,7 @@ function start(evt) {
         Notiflix.Notify.failure(`❌ Rejected promise ${position} in ${delay}ms`)
       );
 
-    delay += Number(STEP);
+    delay += Number(Step);
   }
 }
 

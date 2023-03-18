@@ -2,66 +2,27 @@ import flatpickr from 'flatpickr';
 import 'flatpickr/dist/flatpickr.min.css';
 import Notiflix from 'notiflix';
 
-const btnStartRef = document.querySelector('[data-start]');
-const spanDaysRef = document.querySelector('[data-days]');
-const spanHoursRef = document.querySelector('[data-hours]');
-const spanMinutesf = document.querySelector('[data-minutes');
-const spanSecondsRef = document.querySelector('[data-seconds]');
+const refs = {
+  start: document.querySelector('[data-start]'),
+  days: document.querySelector('[data-days]'),
+  hours: document.querySelector('[data-hours]'),
+  minutes: document.querySelector('[data-minutes]'),
+  seconds: document.querySelector('[data-seconds]'),
+  input: document.querySelector('#datetime-picker'),
+};
 
-let msSelected = null;
-let idInterval = null;
-
-btnStartRef.disabled = true;
+refs.start.setAttribute('disabled', 'disabled');
 
 const options = {
   enableTime: true,
   time_24hr: true,
   defaultDate: new Date(),
   minuteIncrement: 1,
-
-  onClose(selectedDates) {
-    msSelected = selectedDates[0].getTime();
-    if (msSelected < new Date()) {
-      Notiflix.Notify.failure('Please choose a date in the future.');
-      return;
-    }
-    btnStartRef.classList.add('btn');
-    btnStartRef.disabled = false;
-  },
+  onClose,
 };
-
-flatpickr('#datetime-picker', options);
-
-let object = {};
-
-const onCountTime = () => {
-  idInterval = setInterval(() => {
-    const diff = msSelected - new Date().getTime();
-    if (diff <= 0) {
-      clearTimeout(idInterval);
-      return;
-    }
-    object = convertMs(diff);
-    onChangeContent(addLeadingZero(object));
-  }, 1000);
-};
-
-function addLeadingZero(values) {
-  const newValues = { ...values };
-  const keys = Object.keys(newValues);
-  for (const key of keys) {
-    newValues[key] = String(newValues[key]).padStart(2, 0);
-  }
-  return newValues;
-}
-
-function onChangeContent({ days, hours, minutes, seconds }) {
-  spanDaysRef.textContent = days;
-  spanHoursRef.textContent = hours;
-  spanMinutesf.textContent = minutes;
-  spanSecondsRef.textContent = seconds;
-}
-
+const flatpickrTimer = new flatpickr(refs.input, options);
+let timer = null;
+let timerId = null;
 function convertMs(ms) {
   const second = 1000;
   const minute = second * 60;
@@ -72,8 +33,46 @@ function convertMs(ms) {
   const hours = Math.floor((ms % day) / hour);
   const minutes = Math.floor(((ms % day) % hour) / minute);
   const seconds = Math.floor((((ms % day) % hour) % minute) / second);
-
   return { days, hours, minutes, seconds };
 }
+function onClose(selectedDates) {
+  if (selectedDates[0] >= new Date()) {
+    refs.start.removeAttribute('disabled', 'disabled');
 
-btnStartRef.addEventListener('click', onCountTime);
+    timer = selectedDates[0];
+
+    return timer;
+  }
+  Notiflix.Notify.failure('Please choose a date in the future');
+}
+
+function onTimerMarkup({ days, hours, minutes, seconds }) {
+  refs.days.textContent = addLeadingZero(days);
+  refs.hours.textContent = addLeadingZero(hours);
+  refs.minutes.textContent = addLeadingZero(minutes);
+  refs.seconds.textContent = addLeadingZero(seconds);
+}
+refs.start.addEventListener('click', () => {
+  if (timerId) {
+    return;
+  }
+  timerId = setInterval(onTimerStart, 1000);
+});
+function onTimerStart() {
+  refs.input.setAttribute('disabled', 'disabled');
+  let timeForMurkup = timer - new Date();
+
+  if (timeForMurkup > 1) {
+    onTimerMarkup(convertMs(timeForMurkup));
+  } else {
+    clearInterval(timerId);
+  }
+}
+
+function addLeadingZero(value) {
+  return String(value).padStart(2, 0);
+}
+Notiflix.Notify.init({
+  timeout: 2000,
+  clickToClose: true,
+});
